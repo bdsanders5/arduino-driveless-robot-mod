@@ -1,31 +1,23 @@
 
 //define RC input connections (all attach interupt pins) -> mega attach interupt pins = 2, 3, 18, 19, 20, 21
-int ch3Input = 21; //joystick vertical
-int ch4Input = 20; //joystick horizontal
+int ch1Input = 21; //joystick vertical
+int ch2Input = 20; //joystick horizontal
 int ch5Input = 19; //trigger safety
 int ch6Input = 18; //camera on/off
 int ch7Input = 2; //trigger pull
 int ch8Input = 3; //light on/off
 
-//empty connections
+//empty connection
 int emptySwitchOutput1 = A4;
-int emptySwitchOutput2 = A5;
 
-//camera output connections
-int cameraTXSwitchOutput = 45;
-int camera1PowerOutput = A6;
-int camera1SigalOutput = A9;
-int camera2PowerOutput = A7;
-int camera2SigalOutput = A10;
-int camera3PowerOutput = A8;
-int camera3SigalOutput = A11;
+//camera output connection
+int camera1PowerOutput = A6; // control camera & transmitter with this connection
 
 //trigger output connections
 int pullTriggerOutput = 43;
 //light switch output pin
 int lightSwitchOutput = 44;
-//solinoid output pin
-int solenoidSwitchOutput = 39;
+
 //Motor output Connections
 int panUpOutput = 42;
 int rotateRightOutput = 40;
@@ -35,18 +27,16 @@ int rotateLeftOutput = 41;
 
 //initialize startup variables
 int triggerSwitchState = 0;
-int cameraTXSwitchState = 0;
 int camera1SwitchState = 0;
-int camera2SwitchState = 0;
-int camera3SwitchState = 0;
 int lightSwitchState = 0;
-int solenoidSwitchState = 0;
-int joyUpState = 0;
-int joyRightState = 0;
-int joyDownState = 0;
-int joyLeftState = 0;
-int driverMotorsStateX = 64;
-int driverMotorsStateY = 192;
+
+int driverMotor1State = 0;
+int driverMotor2State = 0;
+int driverMotor1Rpmw = 0;
+int driverMotor1Lpmw = 0;
+int driverMotor2Rpmw = 0;
+int driverMotor2Lpmw = 0;
+
 
 //initialize RC input variables & temp vars for calculations
 volatile long ch7; 
@@ -57,28 +47,23 @@ volatile long ch6;
 volatile long count2; // temporary variable for ch6 
 volatile long ch5; // servo value 
 volatile long count3; // temporary variable for ch5
-volatile long ch4; // servo value 
-volatile long count4; // temporary variable for ch4
-volatile long ch3; // servo value 
-volatile long count5; // temporary variable for ch3
+volatile long ch2; // servo value 
+volatile long count4; // temporary variable for ch2
+volatile long ch1; // servo value 
+volatile long count5; // temporary variable for ch1
 
 // Define controller motors Joystick Values - Start at 1500 (middle position)
 int joyposVert = 1500;
 int joyposHorz = 1500;
 
-int mode = 0;
 int noSignalLoopCounter = 0;
 
-//set default camera to 2 - (front drive cam)
-int cameraSelected = 2;
 
 
 
 void setup() { 
   Serial.begin(9600);
-  Serial2.begin(9600);
   //initialize drive motors off
-  Serial2.write(0);
   initRCInputPins();
   initSwitchPins();
   initTiltPanPins();
@@ -86,6 +71,7 @@ void setup() {
 
 void loop() { 
   delay(100); 
+  /*
   if ( ( (ch7 > 1250) && (ch7 < 1750) ) || (ch7 == 0) ) {
     noSignalLoopCounter++;
   } else {
@@ -94,26 +80,19 @@ void loop() {
   if (noSignalLoopCounter > 5) {
     killRobot();
   }
+  */
+  
 
-  //set mode...
-  setMode(); //0 = neutral, 1 = drive, 2 = armed / safety off...
-  if (mode == 1) {
     controlDriverMotors();
-  } else if (mode == 2) {
-    controlTiltPan();
-    controlSwitches();
-    controlTrigger();
-  } else {
-    controlCameraSelector();
-  }
+  
 
-}  
+} 
 
 
 
 void initRCInputPins() {
-  pinMode(ch3Input, INPUT);
-  pinMode(ch4Input, INPUT);
+  pinMode(ch1Input, INPUT);
+  pinMode(ch2Input, INPUT);
   pinMode(ch5Input, INPUT);
   pinMode(ch6Input, INPUT);
   pinMode(ch7Input, INPUT);
@@ -194,73 +173,18 @@ void setMode() {
 
 }
 
-void controlCameraSelector() {
-  //kill drive motors...
-  Serial2.write(0);
-  solenoidSwitchState = 0;
-  digitalWrite(solenoidSwitchOutput, HIGH);
-  //make sure camera TX is on...
-  digitalWrite(cameraTXSwitchOutput, LOW);
-
-  if (ch3 > 1600) {
-    joyUpState = 1;
-  } else {
-    joyUpState = 0;
-  }
-  if ((ch3 < 1350) && (ch3 > 900)) {
-    joyDownState = 1;
-  } else {
-    joyDownState = 0;
-  }
-  if (ch4 > 1600)  {
-    joyRightState = 1;
-  } else {
-    joyRightState = 0;
-  }
-  if ( (ch4 < 1450) && (ch4 > 900) ) {
-    joyLeftState = 1;
-  } else {
-    joyLeftState = 0;
-  }
-  if (joyUpState == 1) {
-    if (cameraSelected != 1) {
-      killAllCameras();
-      cameraSelected = 1;
-    }
-    digitalWrite(camera1PowerOutput, LOW);
-    digitalWrite(camera1SigalOutput, LOW);
-  }
-  if (joyLeftState == 1) {
-    if (cameraSelected != 2) {
-      killAllCameras();
-      cameraSelected = 2;
-    }
-    digitalWrite(camera2PowerOutput, LOW);
-    digitalWrite(camera2SigalOutput, LOW);
-  }
-  if (joyDownState == 1) {
-    if (cameraSelected != 3) {
-      killAllCameras();
-      cameraSelected = 3;
-    }
-    digitalWrite(camera3PowerOutput, LOW);
-    digitalWrite(camera3SigalOutput, LOW);
-  }
-}
 
 
 void controlTiltPan() {
-  //kill drive motors...
-  Serial2.write(0);
-  solenoidSwitchState = 0;
-  digitalWrite(solenoidSwitchOutput, HIGH);
-
-  if (ch3 > 1600) {
-    joyUpState = 1;
-  } else {
+  
+  if (ch1 > 1600) {
+    upSpeed = map(joyposVert, 1500, 1000, 0, 255); // motor 1... 0 is stopped, 255 is full reverse...
+    analogWrite(panUpOutput, upSpeed);
+    analogWrite(panDownOutput, 0);
+  if (ch1 <= 1600) {
     joyUpState = 0;
   }
-  if ((ch3 < 1350) && (ch3 > 900)) {
+  if ((ch1 < 1350) && (ch1 > 900)) {
     joyDownState = 1;
   } else {
     joyDownState = 0;
@@ -276,10 +200,8 @@ void controlTiltPan() {
     joyLeftState = 0;
   }
 
-  if (joyUpState == 1) {
-    digitalWrite(panUpOutput, LOW);
-  } else {
-    digitalWrite(panUpOutput, HIGH);
+    
+  
   }
   if (joyRightState == 1) {
     digitalWrite(rotateRightOutput, LOW);
@@ -304,9 +226,9 @@ void controlTiltPan() {
 void controlSwitches() {
   //ch6 = top right rotation thing // clockwise = 1983 //counter clockwise = 990
   if (ch6 > 1500) {
-    cameraTXSwitchState = 0;
+    camera1SwitchState = 0;
   } else {
-    cameraTXSwitchState = 1;
+    camera1SwitchState = 1;
   }
   //ch8 = top left rotation thing // clockwise = 1983 //counter clockwise = 990
   if (ch8 > 1500) {
@@ -315,32 +237,18 @@ void controlSwitches() {
     lightSwitchState = 0;
   }
 
-  if (cameraTXSwitchState == 1) {
+  if (camera1SwitchState == 1) {
     digitalWrite(cameraTXSwitchOutput, LOW);
-    if (cameraSelected == 2) {
-      digitalWrite(camera2PowerOutput, LOW);
-      digitalWrite(camera2SigalOutput, LOW);
-    } else if(cameraSelected == 1) {
-      digitalWrite(camera1PowerOutput, LOW);
-      digitalWrite(camera1SigalOutput, LOW);
-    } else {
-      digitalWrite(camera3PowerOutput, LOW);
-      digitalWrite(camera3SigalOutput, LOW);
-    }
+    digitalWrite(camera1PowerOutput, LOW);
   } else {
     digitalWrite(cameraTXSwitchOutput, HIGH);
-    killAllCameras();
+    digitalWrite(camera1PowerOutput, HIGH);
   }
+
   if (lightSwitchState == 1) {
     digitalWrite(lightSwitchOutput, LOW);
   } else {
     digitalWrite(lightSwitchOutput, HIGH);
-  }
-
-  if (solenoidSwitchState == 1) {
-    digitalWrite(solenoidSwitchOutput, LOW);
-  } else {
-    digitalWrite(solenoidSwitchOutput, HIGH);
   }
 
 }
@@ -376,21 +284,9 @@ void controlDriverMotors() {
   //disable trigger...
   triggerSwitchState = 0;
   digitalWrite(pullTriggerOutput, HIGH);
-  //disable tilt/pan...
-  joyUpState = 0;
-  joyDownState = 0;
-  joyRightState = 0;
-  joyLeftState = 0;
-  digitalWrite(panUpOutput, HIGH);
-  digitalWrite(rotateRightOutput, HIGH);
-  digitalWrite(panDownOutput, HIGH);
-  digitalWrite(rotateLeftOutput, HIGH);
-
-  // drivetrain pin on...
-  digitalWrite(solenoidSwitchOutput, LOW);
-
-  joyposVert = ch3;
-  joyposHorz = ch4;
+  
+  joyposVert = ch1;
+  joyposHorz = ch2;
   int centerPositionVert = 1500;
   int centerPositionHorz = 1492;
   int signalBuffer = 25;
@@ -464,22 +360,11 @@ void controlDriverMotors() {
 
 //helper functions...
 
-void killAllCameras() {
-  digitalWrite(camera1PowerOutput, HIGH);
-  digitalWrite(camera1SigalOutput, HIGH);
-  digitalWrite(camera2PowerOutput, HIGH);
-  digitalWrite(camera2SigalOutput, HIGH);
-  digitalWrite(camera3PowerOutput, HIGH);
-  digitalWrite(camera3SigalOutput, HIGH);
-}
 
 void killRobot() {
-  Serial2.write(0);
-  digitalWrite(solenoidSwitchOutput, HIGH);
   digitalWrite(pullTriggerOutput, HIGH);
   //digitalWrite(cameraTXSwitchOutput, HIGH); leave a camera on
   digitalWrite(lightSwitchOutput, HIGH);
-  digitalWrite(solenoidSwitchState, HIGH);
   digitalWrite(panUpOutput, HIGH);
   digitalWrite(rotateRightOutput, HIGH);
   digitalWrite(panDownOutput, HIGH);
