@@ -7,8 +7,22 @@ int ch6Input = 18; //camera on/off
 int ch7Input = 2; //trigger pull
 int ch8Input = 3; //light on/off
 
-//empty connection
+//empty connection -> this shouldgo to white relay.
 int emptySwitchOutput1 = A4;
+
+//motor enables...
+int motor1_R_EN = ?;
+int motor1_L_EN = ?;
+int motor2_R_EN = ?;
+int motor2_L_EN = ?;
+
+//Motor output Connections - need changedto analog pins...
+int panUpOutput = 42;
+int rotateRightOutput = 40;
+int panDownOutput = 38;
+int rotateLeftOutput = 41;
+
+
 
 //camera output connection
 int camera1PowerOutput = A6; // control camera & transmitter with this connection
@@ -18,24 +32,19 @@ int pullTriggerOutput = 43;
 //light switch output pin
 int lightSwitchOutput = 44;
 
-//Motor output Connections
-int panUpOutput = 42;
-int rotateRightOutput = 40;
-int panDownOutput = 38;
-int rotateLeftOutput = 41;
 
 
 //initialize startup variables
+int motor1Rpmw = 0;
+int motor1Lpmw = 0;
+int motor2Rpmw = 0;
+int motor2Lpmw = 0;
+
 int triggerSwitchState = 0;
 int camera1SwitchState = 0;
 int lightSwitchState = 0;
+int safetySwitchState = 0;
 
-int driverMotor1State = 0;
-int driverMotor2State = 0;
-int driverMotor1Rpmw = 0;
-int driverMotor1Lpmw = 0;
-int driverMotor2Rpmw = 0;
-int driverMotor2Lpmw = 0;
 
 
 //initialize RC input variables & temp vars for calculations
@@ -115,36 +124,40 @@ void initRCInputPins() {
 
 void initSwitchPins() {
   //initialize digital output pins to HIGH so we can sink any current supplied to them (they source current immediately when pinmode set)...
+  
+  
+    = ?;
+int  = ?;
+int  = ?;
+int  = ?;
+  
   digitalWrite(pullTriggerOutput, HIGH);
   digitalWrite(cameraTXSwitchOutput, HIGH);
   digitalWrite(camera1PowerOutput, HIGH);
   digitalWrite(camera1SigalOutput, HIGH);
-  digitalWrite(camera2PowerOutput, HIGH);
-  digitalWrite(camera2SigalOutput, HIGH);
-  digitalWrite(camera3PowerOutput, HIGH);
-  digitalWrite(camera3SigalOutput, HIGH);
+  digitalWrite(motor1_R_EN, HIGH);
+  digitalWrite(motor1_L_EN, HIGH);
+  digitalWrite(motor2_R_EN, HIGH);
+  digitalWrite(motor2_L_EN, HIGH);
   digitalWrite(lightSwitchOutput, HIGH);
-  digitalWrite(solenoidSwitchOutput, HIGH);
   digitalWrite(emptySwitchOutput1, HIGH);
-  digitalWrite(emptySwitchOutput2, HIGH);
 
   //set output pins...
   pinMode(pullTriggerOutput, OUTPUT);
   pinMode(cameraTXSwitchOutput, OUTPUT);
   pinMode(camera1PowerOutput, OUTPUT);
   pinMode(camera1SigalOutput, OUTPUT);
-  pinMode(camera2PowerOutput, OUTPUT);
-  pinMode(camera2SigalOutput, OUTPUT);
-  pinMode(camera3PowerOutput, OUTPUT);
-  pinMode(camera3SigalOutput, OUTPUT);
+  pinMode(motor1_R_EN, OUTPUT);
+  pinMode(motor1_L_EN, OUTPUT);
+  pinMode(motor2_R_EN, OUTPUT);
+  pinMode(motor2_L_EN, OUTPUT);
   pinMode(lightSwitchOutput, OUTPUT);
   pinMode(solenoidSwitchOutput, OUTPUT);
   pinMode(emptySwitchOutput1, OUTPUT);
-  pinMode(emptySwitchOutput2, OUTPUT);
 
-  //turn camera 2 on by default...
-  digitalWrite(camera2PowerOutput, LOW);
-  digitalWrite(camera2SigalOutput, LOW);
+  //turn camera on by default...
+  digitalWrite(camera1PowerOutput, LOW);
+  digitalWrite(camera1SigalOutput, LOW);
 
 }
 
@@ -177,6 +190,39 @@ void setMode() {
 
 void controlTiltPan() {
   
+  
+  //control motor one....................................................................
+  //you need to find the range of ch1 ///this sketch assumes 0 to 1023
+  
+  //should prolly add a buffer aswell
+  
+  //repeat code below for motor 2
+  
+  int sensorValue = analogRead(ch1);
+ 
+  // sensor value is in the range 0 to 1023
+  // the lower half of it we use for reverse rotation; the upper half for forward rotation
+  if (sensorValue < 512)
+  {
+        
+    digitalWrite(Motor1_R_EN, HIGH);
+
+    // reverse rotation
+    int reversePWM = -(sensorValue - 511) / 2;
+    analogWrite(LPWM_Output, 0);
+    analogWrite(RPWM_Output, reversePWM);
+  }
+  else
+  {
+    // forward rotation
+    int forwardPWM = (sensorValue - 512) / 2;
+    analogWrite(RPWM_Output, 0);
+    analogWrite(LPWM_Output, forwardPWM);
+  }
+  //.............................................................................................
+  
+  
+  //old stuff...................
   if (ch1 > 1600) {
     upSpeed = map(joyposVert, 1500, 1000, 0, 255); // motor 1... 0 is stopped, 255 is full reverse...
     analogWrite(panUpOutput, upSpeed);
