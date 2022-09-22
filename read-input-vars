@@ -65,7 +65,6 @@ void initRCInputPins() {
 
 
 //helper functions...
-
 void handleInterrupt_P2() { 
   if(int0) 
     count0=micros(); // we got a positive edge 
@@ -99,16 +98,15 @@ void handleInterrupt_P20() {
   if(int4) 
     count4=micros(); // we got a positive edge 
   else 
-   ch4=micros()-count4; // Negative edge: get pulsewidth 
+   ch2=micros()-count4; // Negative edge: get pulsewidth 
 }
 
 void handleInterrupt_P21() { 
   if(int5) 
     count5=micros(); // we got a positive edge 
   else 
-   ch3=micros()-count5; // Negative edge: get pulsewidth 
+   ch1=micros()-count5; // Negative edge: get pulsewidth 
 }
-
 
 void serialPrintInputVars() {
   delay(1000); 
