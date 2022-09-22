@@ -72,10 +72,9 @@ int noSignalLoopCounter = 0;
 
 void setup() { 
   Serial.begin(9600);
-  //initialize drive motors off
   initRCInputPins();
   initSwitchPins();
-  initTiltPanPins();
+  //initTiltPanPins();
 } 
 
 void loop() { 
@@ -91,9 +90,7 @@ void loop() {
   }
   */
   
-
-    controlDriverMotors();
-  
+  controlDriverMotors();
 
 } 
 
@@ -125,16 +122,8 @@ void initRCInputPins() {
 void initSwitchPins() {
   //initialize digital output pins to HIGH so we can sink any current supplied to them (they source current immediately when pinmode set)...
   
-  
-    = ?;
-int  = ?;
-int  = ?;
-int  = ?;
-  
   digitalWrite(pullTriggerOutput, HIGH);
-  digitalWrite(cameraTXSwitchOutput, HIGH);
   digitalWrite(camera1PowerOutput, HIGH);
-  digitalWrite(camera1SigalOutput, HIGH);
   digitalWrite(motor1_R_EN, HIGH);
   digitalWrite(motor1_L_EN, HIGH);
   digitalWrite(motor2_R_EN, HIGH);
@@ -144,15 +133,12 @@ int  = ?;
 
   //set output pins...
   pinMode(pullTriggerOutput, OUTPUT);
-  pinMode(cameraTXSwitchOutput, OUTPUT);
   pinMode(camera1PowerOutput, OUTPUT);
-  pinMode(camera1SigalOutput, OUTPUT);
   pinMode(motor1_R_EN, OUTPUT);
   pinMode(motor1_L_EN, OUTPUT);
   pinMode(motor2_R_EN, OUTPUT);
   pinMode(motor2_L_EN, OUTPUT);
   pinMode(lightSwitchOutput, OUTPUT);
-  pinMode(solenoidSwitchOutput, OUTPUT);
   pinMode(emptySwitchOutput1, OUTPUT);
 
   //turn camera on by default...
@@ -162,29 +148,7 @@ int  = ?;
 }
 
 
-void initTiltPanPins() {
-  //initialize digital output pins to HIGH so we can sink any current supplied to them (they source current immediately when pinmode set)...
-  digitalWrite(panUpOutput, HIGH);
-  digitalWrite(rotateRightOutput, HIGH);
-  digitalWrite(panDownOutput, HIGH);
-  digitalWrite(rotateLeftOutput, HIGH);
-  //setup output pins...
-  pinMode(panUpOutput, OUTPUT);
-  pinMode(panDownOutput, OUTPUT);
-  pinMode(rotateLeftOutput, OUTPUT);
-  pinMode(rotateRightOutput, OUTPUT);
-}
 
-void setMode() {
-  if (ch5 < 1200) { //top right toggle switch in up position...
-    mode = 1; //drive
-  } else if (ch5 > 1800) {
-    mode = 2; //armed
-  } else {
-    mode = 0; //camera selection
-  }
-
-}
 
 
 
@@ -205,16 +169,21 @@ void controlTiltPan() {
   if (ch1 < 512)
   {
         
-    digitalWrite(Motor1_R_EN, HIGH);
-
     // reverse rotation
+    digitalWrite(motor1_R_EN, LOW);
+    digitalWrite(motor1_L_EN, HIGH);
+
     int reversePWM = -(ch1 - 511) / 2;
     analogWrite(LPWM_Output, 0);
     analogWrite(RPWM_Output, reversePWM);
   }
   else
   {
+    
     // forward rotation
+    digitalWrite(motor1_L_EN, LOW);
+    digitalWrite(motor1_R_EN, HIGH);
+
     int forwardPWM = (ch1 - 512) / 2;
     analogWrite(RPWM_Output, 0);
     analogWrite(LPWM_Output, forwardPWM);
