@@ -34,12 +34,7 @@ void setup() {
 
 void loop() { 
   delay(100); 
-  Serial.println(ch1); //center: = 1492-1496, top = 2000, bottom = 992 ////good start position might be 1550
-  Serial.println(ch2); //center = 1492-1500, left = 992, right = 1992-1996
-  Serial.println(ch5); //down = 992 - 998, up = 1992-1996
-  Serial.println(ch6); //down = 992 - 998, up = 1992-1996
-  Serial.println(ch7); //up: 988, center = 1492, down = 1992
-  Serial.println(ch8); //up: 992, center = 1496, down = 1996
+  serialPrintInputVars(); // method at page's bottom
 } 
 
 
@@ -112,4 +107,15 @@ void handleInterrupt_P21() {
     count5=micros(); // we got a positive edge 
   else 
    ch3=micros()-count5; // Negative edge: get pulsewidth 
+}
+
+
+void serialPrintInputVars() {
+  delay(1000); 
+  Serial.println(ch1); //center: = 1492-1496, top = 2000, bottom = 992 ////good start position might be 1550
+  Serial.println(ch2); //center = 1492-1500, left = 992, right = 1992-1996
+  Serial.println(ch5); //down = 992 - 998, up = 1992-1996
+  Serial.println(ch6); //down = 992 - 998, up = 1992-1996
+  Serial.println(ch7); //up: 988, center = 1492, down = 1992
+  Serial.println(ch8); //up: 992, center = 1496, down = 1996
 }
