@@ -198,24 +198,24 @@ void controlTiltPan() {
   
   //repeat code below for motor 2
   
-  int sensorValue = analogRead(ch1);
+  //int sensorValue = ch1; //changed to ch1 in code
  
   // sensor value is in the range 0 to 1023
   // the lower half of it we use for reverse rotation; the upper half for forward rotation
-  if (sensorValue < 512)
+  if (ch1 < 512)
   {
         
     digitalWrite(Motor1_R_EN, HIGH);
 
     // reverse rotation
-    int reversePWM = -(sensorValue - 511) / 2;
+    int reversePWM = -(ch1 - 511) / 2;
     analogWrite(LPWM_Output, 0);
     analogWrite(RPWM_Output, reversePWM);
   }
   else
   {
     // forward rotation
-    int forwardPWM = (sensorValue - 512) / 2;
+    int forwardPWM = (ch1 - 512) / 2;
     analogWrite(RPWM_Output, 0);
     analogWrite(LPWM_Output, forwardPWM);
   }
