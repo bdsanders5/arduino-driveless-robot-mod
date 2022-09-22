@@ -34,13 +34,12 @@ void setup() {
 
 void loop() { 
   delay(100); 
-  Serial.println(ch1);
-  Serial.println(ch2);
-  Serial.println(ch5);
-  Serial.println(ch6);
-  Serial.println(ch7);
-  Serial.println(ch8);
-  Serial.println('-------');
+  Serial.println(ch1); //center: = 1492-1496, top = 2000, bottom = 992 ////good start position might be 1550
+  Serial.println(ch2); //center = 1492-1500, left = 992, right = 1992-1996
+  Serial.println(ch5); //down = 992 - 998, up = 1992-1996
+  Serial.println(ch6); //down = 992 - 998, up = 1992-1996
+  Serial.println(ch7); //up: 988, center = 1492, down = 1992
+  Serial.println(ch8); //up: 988, center = 1492, down = 1992
 } 
 
 
