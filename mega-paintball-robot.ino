@@ -1,16 +1,16 @@
 
 //define RC input connections (all attach interupt pins) -> mega attach interupt pins = 2, 3, 18, 19, 20, 21
-int ch1Input = 21; //joystick vertical
-int ch2Input = 20; //joystick horizontal
-int ch5Input = 19; //trigger safety
-int ch6Input = 18; //camera on/off
-int ch7Input = 2; //trigger pull
-int ch8Input = 3; //light on/off
+int ch1Input = 21; //right joystick vertical
+int ch2Input = 20; //right joystick horizontal
+int ch5Input = 19; //trigger safety - top left edge toggle
+int ch6Input = 18; //trigger pull - top right edge toggle
+int ch7Input = 2; //light on/off - top left 3 way switch
+int ch8Input = 3; //camera on/off (top right 3 way switch)
 
 //empty connection -> this shouldgo to white relay.
 int emptySwitchOutput1 = A4;
 
-//motor enables...
+//motor enable pins...
 int motor1_R_EN = ?;
 int motor1_L_EN = ?;
 int motor2_R_EN = ?;
