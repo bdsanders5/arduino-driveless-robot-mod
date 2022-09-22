@@ -1,1 +1,241 @@
-x
+//define RC input connections (all attach interupt pins) -> mega attach interupt pins = 2, 3, 18, 19, 20, 21
+int ch1Input = 21; //right joystick vertical
+int ch2Input = 20; //right joystick horizontal
+int ch5Input = 19; //trigger safety - top left edge toggle
+int ch6Input = 18; //trigger pull - top right edge toggle
+int ch7Input = 2; //light on/off - top left 3 way switch
+int ch8Input = 3; //camera on/off (top right 3 way switch)
+
+//motor enable pins...
+int motor1_R_EN = 39;
+int motor1_L_EN = 37;
+int motor2_R_EN = 41;
+int motor2_L_EN = 35;
+
+//Motor output Connections - MAY need changed to A10, A12, A11, A12 Aanalog pins...
+int panUpOutput = 10; //may need to change to A10
+int panDownOutput = 12;
+int rotateRightOutput = 11;
+int rotateLeftOutput = 13;
+
+//camera output connection
+int camera1PowerOutput = A6; // control camera & transmitter with this connection
+//trigger output connections
+int pullTriggerOutput = 43;
+//light switch output pin
+int lightSwitchOutput = 44;
+//empty connection -> this shouldgo to white wired relay switch as a placeholder.
+int emptySwitchOutput1 = A4;
+
+
+//initialize startup variables
+int motor1Rpmw = 0;
+int motor1Lpmw = 0;
+int motor2Rpmw = 0;
+int motor2Lpmw = 0;
+int safetySwitchState = 0;
+int triggerSwitchState = 0;
+int camera1SwitchState = 0;
+int lightSwitchState = 0;
+
+
+
+
+//initialize RC input variables & temp vars for calculations
+volatile long ch1; 
+volatile long count0; // temporary variable for ch7
+volatile long ch2;
+volatile long count1; // temporary variable for ch8
+volatile long ch5;
+volatile long count2; // temporary variable for ch6 
+volatile long ch6; // servo value 
+volatile long count3; // temporary variable for ch5
+volatile long ch7; // servo value 
+volatile long count4; // temporary variable for ch2
+volatile long ch8; // servo value 
+volatile long count5; // temporary variable for ch1
+
+// Define controller motors Joystick Values - Start at 1500 (middle position)
+int joyposVert = 1500;
+int joyposHorz = 1500;
+
+
+
+
+void setup() { 
+  Serial.begin(9600);
+  initRCInputPins();
+  initSwitchPins();
+  //initDriveMotorPins(); //hang loose here... let's not fry the modules.
+} 
+
+void loop() { 
+  //serialPrintInputVars(); //used for testing
+  controlSwitches();
+  controlTrigger();
+} 
+
+
+void controlSwitches() {
+  //ch8 = top right 3 way switch
+  if (ch8 < 1250) {
+    camera1SwitchState = 0;
+  } else {
+    camera1SwitchState = 1;
+  }
+  //ch7 = top left 3 way switch
+  if (ch8 < 1250) {
+    lightSwitchState = 1;
+  } else {
+    lightSwitchState = 0;
+  }
+
+  if (camera1SwitchState == 1) {
+    digitalWrite(camera1PowerOutput, LOW);
+  } else {
+    digitalWrite(camera1PowerOutput, HIGH);
+  }
+
+  if (lightSwitchState == 1) {
+    digitalWrite(lightSwitchOutput, LOW);
+  } else {
+    digitalWrite(lightSwitchOutput, HIGH);
+  }
+
+}
+
+
+
+void controlTrigger() {
+  if (ch5 > 1500) { //top left toggle switch in up position (safety Off)...
+    //ch7 = top right toggle up = trigger pull...
+    if (ch6 > 1500) {
+      triggerSwitchState = 1;
+    } else {
+      triggerSwitchState = 0;
+    }
+    if (triggerSwitchState == 1) {
+      digitalWrite(pullTriggerOutput, LOW);
+      delay(50);
+    } else {
+      digitalWrite(pullTriggerOutput, HIGH);
+    }
+  } else {
+      digitalWrite(pullTriggerOutput, HIGH);
+  }
+}
+
+
+void initSwitchPins() {
+  //initialize digital output pins to HIGH so we can sink any current supplied to them (they source current immediately when pinmode set)...
+  
+  digitalWrite(pullTriggerOutput, HIGH);
+  digitalWrite(camera1PowerOutput, HIGH);
+
+  digitalWrite(lightSwitchOutput, HIGH);
+  digitalWrite(emptySwitchOutput1, HIGH);
+
+  //set output pins...
+  pinMode(pullTriggerOutput, OUTPUT);
+  pinMode(camera1PowerOutput, OUTPUT);
+  pinMode(lightSwitchOutput, OUTPUT);
+  pinMode(emptySwitchOutput1, OUTPUT);
+
+  //turn camera on by default...
+  //digitalWrite(camera1PowerOutput, LOW);
+  //digitalWrite(camera1SigalOutput, LOW);
+
+}
+
+void initDriveMotorPins() {
+  digitalWrite(motor1_R_EN, HIGH);
+  digitalWrite(motor1_L_EN, HIGH);
+  digitalWrite(motor2_R_EN, HIGH);
+  digitalWrite(motor2_L_EN, HIGH);
+  pinMode(motor1_R_EN, OUTPUT);
+  pinMode(motor1_L_EN, OUTPUT);
+  pinMode(motor2_R_EN, OUTPUT);
+  pinMode(motor2_L_EN, OUTPUT);
+  
+}
+
+
+void serialPrintInputVars () {
+  delay(1000); 
+  Serial.println(ch1); //center: = 1492-1496, top = 2000, bottom = 992 ////good start position might be 1550
+  Serial.println(ch2); //center = 1492-1500, left = 992, right = 1992-1996
+  Serial.println(ch5); //down = 992 - 998, up = 1992-1996
+  Serial.println(ch6); //down = 992 - 998, up = 1992-1996
+  Serial.println(ch7); //up: 988, center = 1492, down = 1992
+  Serial.println(ch8); //up: 992, center = 1496, down = 1996
+}
+
+void initRCInputPins() {
+  pinMode(ch1Input, INPUT);
+  pinMode(ch2Input, INPUT);
+  pinMode(ch5Input, INPUT);
+  pinMode(ch6Input, INPUT);
+  pinMode(ch7Input, INPUT);
+  pinMode(ch8Input, INPUT);
+  // Catch up and down 
+  #define int0 (PINE & 0x10) // PIN 2  
+  #define int1 (PINE & 0x20) // PIN 3
+  #define int2 (PIND & 0b00001000) // PIN 18 
+  #define int3 (PIND & 0b00000100) // PIN 19
+  #define int4 (PIND & 0b00000010) //pin 20
+  #define int5 (PIND & 0b00000001) //pin 21
+  attachInterrupt(2,handleInterrupt_P21,CHANGE); // PIN 21
+  attachInterrupt(3,handleInterrupt_P20,CHANGE); // PIN 20
+  attachInterrupt(4,handleInterrupt_P19,CHANGE); // PIN 19
+  attachInterrupt(5,handleInterrupt_P18,CHANGE); // PIN 18
+  attachInterrupt(0,handleInterrupt_P2,CHANGE);  // PIN 2
+  attachInterrupt(1,handleInterrupt_P3,CHANGE); // PIN 3
+}
+
+
+
+
+//helper functions...
+
+void handleInterrupt_P2() { 
+  if(int0) 
+    count0=micros(); // we got a positive edge 
+  else 
+   ch7=micros()-count0; // Negative edge: get pulsewidth 
+}
+
+void handleInterrupt_P3() { 
+  if(int1) 
+    count1=micros(); // we got a positive edge 
+  else 
+   ch8=micros()-count1; // Negative edge: get pulsewidth 
+} 
+
+void handleInterrupt_P18() { 
+  if(int2) 
+    count2=micros(); // we got a positive edge 
+  else 
+   ch6=micros()-count2; // Negative edge: get pulsewidth 
+}
+
+void handleInterrupt_P19() { 
+  if(int3) 
+    count3=micros(); // we got a positive edge 
+  else 
+   ch5=micros()-count3; // Negative edge: get pulsewidth 
+}
+
+
+void handleInterrupt_P20() { 
+  if(int4) 
+    count4=micros(); // we got a positive edge 
+  else 
+   ch4=micros()-count4; // Negative edge: get pulsewidth 
+}
+
+void handleInterrupt_P21() { 
+  if(int5) 
+    count5=micros(); // we got a positive edge 
+  else 
+   ch3=micros()-count5; // Negative edge: get pulsewidth 
+}
