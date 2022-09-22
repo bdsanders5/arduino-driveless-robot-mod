@@ -70,7 +70,7 @@ void setup() {
 } 
 
 void loop() { 
-  //serialPrintInputVars(); //used for testing
+  //serialPrintInputVars(); //used for testing -> function at page's bottom
   controlSwitches();
   controlTrigger();
 } 
