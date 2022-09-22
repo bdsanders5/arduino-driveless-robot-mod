@@ -19,7 +19,11 @@ int rotateRightOutput = 11;
 int rotateLeftOutput = 13;
 
 //camera output connection
+
+//change pin to digital...
 int camera1PowerOutput = A6; // control camera & transmitter with this connection
+
+
 //trigger output connections
 int pullTriggerOutput = 43;
 //light switch output pin
@@ -79,9 +83,9 @@ void loop() {
 void controlSwitches() {
   //ch8 = top right 3 way switch
   if (ch8 < 1250) {
-    camera1SwitchState = 0;
-  } else {
     camera1SwitchState = 1;
+  } else {
+    camera1SwitchState = 0;
   }
   //ch7 = top left 3 way switch
   if (ch8 < 1250) {
