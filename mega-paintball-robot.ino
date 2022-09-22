@@ -7,31 +7,29 @@ int ch6Input = 18; //trigger pull - top right edge toggle
 int ch7Input = 2; //light on/off - top left 3 way switch
 int ch8Input = 3; //camera on/off (top right 3 way switch)
 
-//empty connection -> this shouldgo to white relay.
-int emptySwitchOutput1 = A4;
-
 //motor enable pins...
-int motor1_R_EN = ?;
-int motor1_L_EN = ?;
-int motor2_R_EN = ?;
-int motor2_L_EN = ?;
+int motor1_R_EN = 39;
+int motor1_L_EN = 37;
+int motor2_R_EN = 41;
+int motor2_L_EN = 35;
 
-//Motor output Connections - need changedto analog pins...
-int panUpOutput = 42;
-int rotateRightOutput = 40;
-int panDownOutput = 38;
-int rotateLeftOutput = 41;
-
-
+//Motor output Connections - MAY need changed to A10, A12, A11, A12 Aanalog pins...
+int panUpOutput = 10; //may need to change to A10
+int panDownOutput = 12;
+int rotateRightOutput = 11;
+int rotateLeftOutput = 13;
 
 //camera output connection
 int camera1PowerOutput = A6; // control camera & transmitter with this connection
 
 //trigger output connections
 int pullTriggerOutput = 43;
+
 //light switch output pin
 int lightSwitchOutput = 44;
 
+//empty connection -> this shouldgo to white wired relay switch as a placeholder.
+int emptySwitchOutput1 = A4;
 
 
 //initialize startup variables
@@ -40,10 +38,12 @@ int motor1Lpmw = 0;
 int motor2Rpmw = 0;
 int motor2Lpmw = 0;
 
+
+int safetySwitchState = 0;
 int triggerSwitchState = 0;
 int camera1SwitchState = 0;
 int lightSwitchState = 0;
-int safetySwitchState = 0;
+
 
 
 
@@ -65,8 +65,6 @@ volatile long count5; // temporary variable for ch1
 int joyposVert = 1500;
 int joyposHorz = 1500;
 
-int noSignalLoopCounter = 0;
-
 
 
 
@@ -79,16 +77,6 @@ void setup() {
 
 void loop() { 
   delay(100); 
-  /*
-  if ( ( (ch7 > 1250) && (ch7 < 1750) ) || (ch7 == 0) ) {
-    noSignalLoopCounter++;
-  } else {
-    noSignalLoopCounter = 0;
-  }
-  if (noSignalLoopCounter > 5) {
-    killRobot();
-  }
-  */
   
   controlDriverMotors();
 
@@ -173,20 +161,23 @@ void controlTiltPan() {
     digitalWrite(motor1_R_EN, LOW);
     digitalWrite(motor1_L_EN, HIGH);
 
-    int reversePWM = -(ch1 - 511) / 2; //max speed 255 / adjust accordingly...
-    analogWrite(LPWM_Output, 0);
-    analogWrite(RPWM_Output, reversePWM);
+    motor1Rpmw = -(ch1 - 511) / 2; //max speed 255 / adjust accordingly...
+    analogWrite(panDownOutput, 0);
+    analogWrite(panUpOutput, reversePWM);
+    
+    
   }
   else
   {
     
     // forward rotation
-    digitalWrite(motor1_L_EN, LOW);
     digitalWrite(motor1_R_EN, HIGH);
+    digitalWrite(motor1_L_EN, LOW);
+    
 
-    int forwardPWM = (ch1 - 512) / 2; //max speed 255 / adjust accordingly...
-    analogWrite(RPWM_Output, 0);
-    analogWrite(LPWM_Output, forwardPWM);
+    motor1Lpmw = (ch1 - 512) / 2; //max speed 255 / adjust accordingly...
+    analogWrite(panUpOutput, 0);
+    analogWrite(panDownOutput, forwardPWM);
   }
   //.............................................................................................
   
