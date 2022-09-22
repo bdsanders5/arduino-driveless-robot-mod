@@ -173,7 +173,7 @@ void controlTiltPan() {
     digitalWrite(motor1_R_EN, LOW);
     digitalWrite(motor1_L_EN, HIGH);
 
-    int reversePWM = -(ch1 - 511) / 2;
+    int reversePWM = -(ch1 - 511) / 2; //max speed 255 / adjust accordingly...
     analogWrite(LPWM_Output, 0);
     analogWrite(RPWM_Output, reversePWM);
   }
@@ -184,7 +184,7 @@ void controlTiltPan() {
     digitalWrite(motor1_L_EN, LOW);
     digitalWrite(motor1_R_EN, HIGH);
 
-    int forwardPWM = (ch1 - 512) / 2;
+    int forwardPWM = (ch1 - 512) / 2; //max speed 255 / adjust accordingly...
     analogWrite(RPWM_Output, 0);
     analogWrite(LPWM_Output, forwardPWM);
   }
