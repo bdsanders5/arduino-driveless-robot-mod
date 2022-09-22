@@ -39,7 +39,7 @@ void loop() {
   Serial.println(ch5); //down = 992 - 998, up = 1992-1996
   Serial.println(ch6); //down = 992 - 998, up = 1992-1996
   Serial.println(ch7); //up: 988, center = 1492, down = 1992
-  Serial.println(ch8); //up: 988, center = 1492, down = 1992
+  Serial.println(ch8); //up: 992, center = 1496, down = 1996
 } 
 
 
