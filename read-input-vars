@@ -1,0 +1,116 @@
+//define RC input connections (all attach interupt pins) -> mega attach interupt pins = 2, 3, 18, 19, 20, 21
+int ch1Input = 21; //right joystick vertical
+int ch2Input = 20; //right joystick horizontal
+int ch5Input = 19; //trigger safety - top left edge toggle
+int ch6Input = 18; //trigger pull - top right edge toggle
+int ch7Input = 2; //light on/off - top left 3 way switch
+int ch8Input = 3; //camera on/off (top right 3 way switch)
+
+//initialize RC input variables & temp vars for calculations
+volatile long ch1; 
+volatile long count0; // temporary variable for ch7
+volatile long ch2;
+volatile long count1; // temporary variable for ch8
+volatile long ch5;
+volatile long count2; // temporary variable for ch6 
+volatile long ch6; // servo value 
+volatile long count3; // temporary variable for ch5
+volatile long ch7; // servo value 
+volatile long count4; // temporary variable for ch2
+volatile long ch8; // servo value 
+volatile long count5; // temporary variable for ch1
+
+// Define controller motors Joystick Values - Start at 1500 (middle position)
+int joyposVert = 1500;
+int joyposHorz = 1500;
+
+
+
+
+void setup() { 
+  Serial.begin(9600);
+  initRCInputPins();
+} 
+
+void loop() { 
+  delay(100); 
+  Serial.println(ch1);
+  Serial.println(ch2);
+  Serial.println(ch5);
+  Serial.println(ch6);
+  Serial.println(ch7);
+  Serial.println(ch8);
+  Serial.println('-------');
+} 
+
+
+
+void initRCInputPins() {
+  pinMode(ch1Input, INPUT);
+  pinMode(ch2Input, INPUT);
+  pinMode(ch5Input, INPUT);
+  pinMode(ch6Input, INPUT);
+  pinMode(ch7Input, INPUT);
+  pinMode(ch8Input, INPUT);
+  // Catch up and down 
+  #define int0 (PINE & 0x10) // PIN 2  
+  #define int1 (PINE & 0x20) // PIN 3
+  #define int2 (PIND & 0b00001000) // PIN 18 
+  #define int3 (PIND & 0b00000100) // PIN 19
+  #define int4 (PIND & 0b00000010) //pin 20
+  #define int5 (PIND & 0b00000001) //pin 21
+  attachInterrupt(2,handleInterrupt_P21,CHANGE); // PIN 21
+  attachInterrupt(3,handleInterrupt_P20,CHANGE); // PIN 20
+  attachInterrupt(4,handleInterrupt_P19,CHANGE); // PIN 19
+  attachInterrupt(5,handleInterrupt_P18,CHANGE); // PIN 18
+  attachInterrupt(0,handleInterrupt_P2,CHANGE);  // PIN 2
+  attachInterrupt(1,handleInterrupt_P3,CHANGE); // PIN 3
+}
+
+
+
+
+//helper functions...
+
+void handleInterrupt_P2() { 
+  if(int0) 
+    count0=micros(); // we got a positive edge 
+  else 
+   ch7=micros()-count0; // Negative edge: get pulsewidth 
+}
+
+void handleInterrupt_P3() { 
+  if(int1) 
+    count1=micros(); // we got a positive edge 
+  else 
+   ch8=micros()-count1; // Negative edge: get pulsewidth 
+} 
+
+void handleInterrupt_P18() { 
+  if(int2) 
+    count2=micros(); // we got a positive edge 
+  else 
+   ch6=micros()-count2; // Negative edge: get pulsewidth 
+}
+
+void handleInterrupt_P19() { 
+  if(int3) 
+    count3=micros(); // we got a positive edge 
+  else 
+   ch5=micros()-count3; // Negative edge: get pulsewidth 
+}
+
+
+void handleInterrupt_P20() { 
+  if(int4) 
+    count4=micros(); // we got a positive edge 
+  else 
+   ch4=micros()-count4; // Negative edge: get pulsewidth 
+}
+
+void handleInterrupt_P21() { 
+  if(int5) 
+    count5=micros(); // we got a positive edge 
+  else 
+   ch3=micros()-count5; // Negative edge: get pulsewidth 
+}
