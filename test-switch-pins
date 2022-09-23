@@ -88,7 +88,7 @@ void controlSwitches() {
     camera1SwitchState = 0;
   }
   //ch7 = top left 3 way switch
-  if (ch8 < 1250) {
+  if (ch7 < 1250) {
     lightSwitchState = 1;
   } else {
     lightSwitchState = 0;
