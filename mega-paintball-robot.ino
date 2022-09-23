@@ -69,8 +69,7 @@ void setup() {
   Serial.begin(9600);
   initRCInputPins();
   initSwitchPins();
-  
-  //initDriveMotorPins(); //hang loose here... let's not fry the modules.
+  initDriveMotorPins();
 } 
 
 void loop() { 
