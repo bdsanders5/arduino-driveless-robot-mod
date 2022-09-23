@@ -42,35 +42,36 @@ void testFauxRcInputs() {
   ///joyposVert = ch1;
   //joyposHorz = ch2;
   //simulate...
-  
   int joyposHorz = 1120;
-  
-  //int joyposVert = 2222;
   int joyposVert = 1200;
 
 
-  
+  //make sure values received from rc tx are in range that we're mapping...
   if (joyposVert > 2000) {
     joyposVert = 2000;
-  }
-  if (joyposVert < 1000) {
+  } else if (joyposVert < 1000) {
     joyposVert = 1000;
   }
+  if (joyposHorz > 2000) {
+    joyposHorz = 2000;
+  } else if (joyposHorz < 1000) {
+    joyposHorz = 1000;
+  }
   
-  
+  //initialize motor speed variables...
   int motor1Speed = 0;
-  
+  int motor2Speed = 0;
   
   //hard coded vars...
-  int centerPositionVert = 1500;
-  int centerPositionHorz = 1500;
+  int centerPosition = 1500;
   int signalBuffer = 40;
 
+  
   //make sure valid signal incoming..
   if ((joyposVert > 750) && (joyposHorz > 750)) {
-    
+    //handle motor 1 controller
     //handle up position...
-    if (joyposVert > (centerPositionVert + signalBuffer)) {
+    if (joyposVert > (centerPosition + signalBuffer)) {
       //Determine Motor Speeds
       motor1Speed = map(joyposVert, 1500, 2000, 0, 255); // motor 1... 0 is stopped, 255 is full reverse...
       //Serial.println(motor1Speed); //center: = 1492-1496, top = 2000, bottom = 992 ////good start position might be 1550
@@ -79,22 +80,43 @@ void testFauxRcInputs() {
       Serial.println(motor1Speed); //center: = 1492-1496, top = 2000, bottom = 992 ////good start position might be 1550
 
     //handle down position...
-    } else if (joyposVert < (centerPositionVert - signalBuffer)) {
-
-       
+    } else if (joyposVert < (centerPosition - signalBuffer)) {
       //Determine Motor Speeds
       motor1Speed = map(joyposVert, 1500, 1000, 0, 255);// motor 1... 0 is stopped, 255 full forward...
       analogWrite(R_PWM, 0);
       analogWrite(L_PWM, motor1Speed);
-
     } else {
       // This is Stopped
       analogWrite(L_PWM, 0);
       analogWrite(R_PWM, 0);
     }
+  
+ 
+    //handle motor 2 controller
+    //handle right position...
+    if (joyposHorz > (centerPosition + signalBuffer)) {
+      //Determine Motor Speeds
+      motor2Speed = map(joyposHorz, 1500, 2000, 0, 255);
+      analogWrite(motor2_R_PWM, motor2Speed);
+      analogWrite(motor2_L_PWM, 0);
+
+    //handle left position...
+    } else if (joyposHorz < (centerPosition - signalBuffer)) {
+      //Determine Motor Speeds
+      motor2Speed = map(joyposHorz, 1500, 1000, 0, 255);
+      analogWrite(motor2_R_PWM, 0);
+      analogWrite(motor2_L_PWM, motor2Speed);
+    } else {
+      // This is Stopped
+      analogWrite(motor2_L_PWM, 0);
+      analogWrite(motor2_R_PWM, 0);
+    }
+   
+   
   }
+ 
 
   //Serial.println(motor1Speed);
-  delay(1000);
+  delay(100);
 
 }
