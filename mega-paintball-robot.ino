@@ -1,4 +1,3 @@
-
 //define RC input connections (all attach interupt pins) -> mega attach interupt pins = 2, 3, 18, 19, 20, 21
 int ch1Input = 21; //right joystick vertical
 int ch2Input = 20; //right joystick horizontal
@@ -13,21 +12,20 @@ int motor1_L_EN = 37;
 int motor2_R_EN = 41;
 int motor2_L_EN = 35;
 
-//Motor output Connections - MAY need changed to A10, A12, A11, A12 Aanalog pins...
-int panUpOutput = 10; //may need to change to A10
+//Motor output Connections
+int panUpOutput = 10;
 int panDownOutput = 12;
 int rotateRightOutput = 11;
 int rotateLeftOutput = 13;
 
 //camera output connection
-int camera1PowerOutput = A6; // control camera & transmitter with this connection
+int camera1PowerOutput = 9; // control camera & transmitter with this connection
+
 
 //trigger output connections
 int pullTriggerOutput = 43;
-
 //light switch output pin
 int lightSwitchOutput = 44;
-
 //empty connection -> this shouldgo to white wired relay switch as a placeholder.
 int emptySwitchOutput1 = A4;
 
@@ -37,34 +35,33 @@ int motor1Rpmw = 0;
 int motor1Lpmw = 0;
 int motor2Rpmw = 0;
 int motor2Lpmw = 0;
-
-
 int safetySwitchState = 0;
 int triggerSwitchState = 0;
 int camera1SwitchState = 0;
 int lightSwitchState = 0;
 
+int motor1Speed = 0;
+int motor2Speed = 0;
+int centerPosition = 1500; // rc tx joystick center value for both vertical & horizontal
+int joyposVert = 1500; //start out as centered
+int joyposHorz = 1500; //start out as centered
+int signalBuffer = 40; // used for joystick sensitivity
 
 
 
 //initialize RC input variables & temp vars for calculations
-volatile long ch7; 
+volatile long ch1; 
 volatile long count0; // temporary variable for ch7
-volatile long ch8;
+volatile long ch2;
 volatile long count1; // temporary variable for ch8
-volatile long ch6;
+volatile long ch5;
 volatile long count2; // temporary variable for ch6 
-volatile long ch5; // servo value 
+volatile long ch6; // servo value 
 volatile long count3; // temporary variable for ch5
-volatile long ch2; // servo value 
+volatile long ch7; // servo value 
 volatile long count4; // temporary variable for ch2
-volatile long ch1; // servo value 
+volatile long ch8; // servo value 
 volatile long count5; // temporary variable for ch1
-
-// Define controller motors Joystick Values - Start at 1500 (middle position)
-int joyposVert = 1500;
-int joyposHorz = 1500;
-
 
 
 
@@ -72,15 +69,164 @@ void setup() {
   Serial.begin(9600);
   initRCInputPins();
   initSwitchPins();
-  //initTiltPanPins();
+  
+  //initDriveMotorPins(); //hang loose here... let's not fry the modules.
 } 
 
 void loop() { 
-  delay(100); 
-  
-  controlDriverMotors();
-
+  //serialPrintInputVars(); //used for testing -> function at page's bottom
+  controlSwitches();
+  controlTrigger();
+  controlMotors();
 } 
+
+
+void controlSwitches() {
+  //ch8 = top right 3 way switch
+  if (ch8 < 1200) {
+    camera1SwitchState = 1;
+  } else {
+    camera1SwitchState = 0;
+  }
+  //ch7 = top left 3 way switch
+  if (ch7 < 1200) {
+    lightSwitchState = 1;
+  } else {
+    lightSwitchState = 0;
+  }
+
+  if (camera1SwitchState == 1) {
+    digitalWrite(camera1PowerOutput, LOW);
+  } else {
+    digitalWrite(camera1PowerOutput, HIGH);
+  }
+
+  if (lightSwitchState == 1) {
+    digitalWrite(lightSwitchOutput, LOW);
+  } else {
+    digitalWrite(lightSwitchOutput, HIGH);
+  }
+
+}
+
+
+
+void controlTrigger() {
+  if (ch5 > 1700) { //top left toggle switch in up position (safety Off)...
+    //ch7 = top right toggle up = trigger pull...
+    if (ch6 > 1700) {
+      triggerSwitchState = 1;
+    } else {
+      triggerSwitchState = 0;
+    }
+    if (triggerSwitchState == 1) {
+      digitalWrite(pullTriggerOutput, LOW);
+      delay(100);
+    } else {
+      digitalWrite(pullTriggerOutput, HIGH);
+    }
+  } else {
+      digitalWrite(pullTriggerOutput, HIGH);
+  }
+}
+
+
+void controlMotors() {
+  
+  joyposVert = ch1;
+  joyposHorz = ch2;
+
+  //make sure values received from rc tx are in range that we're mapping...
+  if (joyposVert > 2000) {
+    joyposVert = 2000;
+  } else if (joyposVert < 1000) {
+    joyposVert = 1000;
+  }
+  if (joyposHorz > 2000) {
+    joyposHorz = 2000;
+  } else if (joyposHorz < 1000) {
+    joyposHorz = 1000;
+  }
+    
+  //make sure valid signal incoming..
+  if ((joyposVert > 750) && (joyposHorz > 750)) {
+    //handle motor 1 controller
+    //handle up position...
+    if (joyposVert > (centerPosition + signalBuffer)) {
+      //Determine Motor Speeds
+      motor1Speed = map(joyposVert, 1500, 2000, 0, 255); // motor 1... 0 is stopped, 255 is full reverse...
+      //Serial.println(motor1Speed); //center: = 1492-1496, top = 2000, bottom = 992 ////good start position might be 1550
+      analogWrite(panUpOutput, motor1Speed);
+      analogWrite(panDownOutput, 0);
+
+    //handle down position...
+    } else if (joyposVert < (centerPosition - signalBuffer)) {
+      //Determine Motor Speeds
+      motor1Speed = map(joyposVert, 1500, 1000, 0, 255);// motor 1... 0 is stopped, 255 full forward...
+      analogWrite(panUpOutput, 0);
+      analogWrite(panDownOutput, motor1Speed);
+    } else {
+      // This is Stopped
+      analogWrite(panUpOutput, 0);
+      analogWrite(panDownOutput, 0);
+    }
+ 
+    //handle motor 2 controller
+    //handle right position...
+    if (joyposHorz > (centerPosition + signalBuffer)) {
+      //Determine Motor Speeds
+      motor2Speed = map(joyposHorz, 1500, 2000, 0, 255);
+      analogWrite(rotateRightOutput, motor2Speed);
+      analogWrite(rotateLeftOutput, 0);
+
+    //handle left position...
+    } else if (joyposHorz < (centerPosition - signalBuffer)) {
+      //Determine Motor Speeds
+      motor2Speed = map(joyposHorz, 1500, 1000, 0, 255);
+      analogWrite(rotateRightOutput, 0);
+      analogWrite(rotateLeftOutput, motor2Speed);
+    } else {
+      // This is Stopped
+      analogWrite(rotateRightOutput, 0);
+      analogWrite(rotateLeftOutput, 0);
+    }
+   
+  }
+
+  //Serial.println(motor1Speed);
+  delay(100);
+
+}
+
+
+void initSwitchPins() {
+  //initialize digital output pins to HIGH so we can sink any current supplied to them (they source current immediately when pinmode set)...
+  digitalWrite(pullTriggerOutput, HIGH);
+  digitalWrite(camera1PowerOutput, HIGH);
+  digitalWrite(lightSwitchOutput, HIGH);
+  digitalWrite(emptySwitchOutput1, HIGH);
+  pinMode(pullTriggerOutput, OUTPUT);
+  pinMode(camera1PowerOutput, OUTPUT);
+  pinMode(lightSwitchOutput, OUTPUT);
+  pinMode(emptySwitchOutput1, OUTPUT);
+
+}
+
+void initDriveMotorPins() {
+  pinMode(motor1_R_EN, OUTPUT);
+  pinMode(motor1_L_EN, OUTPUT);
+  pinMode(motor2_R_EN, OUTPUT);
+  pinMode(motor2_L_EN, OUTPUT);
+  pinMode(panUpOutput, OUTPUT);
+  pinMode(panDownOutput, OUTPUT);
+  pinMode(rotateRightOutput, OUTPUT);
+  pinMode(rotateLeftOutput, OUTPUT);
+  digitalWrite(motor1_R_EN, HIGH);
+  digitalWrite(motor1_L_EN, HIGH);
+  digitalWrite(motor2_R_EN, HIGH);
+  digitalWrite(motor2_L_EN, HIGH);
+}
+
 
 
 
@@ -107,282 +253,9 @@ void initRCInputPins() {
 }
 
 
-void initSwitchPins() {
-  //initialize digital output pins to HIGH so we can sink any current supplied to them (they source current immediately when pinmode set)...
-  
-  digitalWrite(pullTriggerOutput, HIGH);
-  digitalWrite(camera1PowerOutput, HIGH);
-  digitalWrite(motor1_R_EN, HIGH);
-  digitalWrite(motor1_L_EN, HIGH);
-  digitalWrite(motor2_R_EN, HIGH);
-  digitalWrite(motor2_L_EN, HIGH);
-  digitalWrite(lightSwitchOutput, HIGH);
-  digitalWrite(emptySwitchOutput1, HIGH);
-
-  //set output pins...
-  pinMode(pullTriggerOutput, OUTPUT);
-  pinMode(camera1PowerOutput, OUTPUT);
-  pinMode(motor1_R_EN, OUTPUT);
-  pinMode(motor1_L_EN, OUTPUT);
-  pinMode(motor2_R_EN, OUTPUT);
-  pinMode(motor2_L_EN, OUTPUT);
-  pinMode(lightSwitchOutput, OUTPUT);
-  pinMode(emptySwitchOutput1, OUTPUT);
-
-  //turn camera on by default...
-  digitalWrite(camera1PowerOutput, LOW);
-  digitalWrite(camera1SigalOutput, LOW);
-
-}
-
-
-
-
-
-
-void controlTiltPan() {
-  
-  
-  //control motor one....................................................................
-  //you need to find the range of ch1 ///this sketch assumes 0 to 1023
-  
-  //should prolly add a buffer aswell
-  
-  //repeat code below for motor 2
-  
-  //int sensorValue = ch1; //changed to ch1 in code
- 
-  // sensor value is in the range 0 to 1023
-  // the lower half of it we use for reverse rotation; the upper half for forward rotation
-  if (ch1 < 512)
-  {
-        
-    // reverse rotation
-    digitalWrite(motor1_R_EN, LOW);
-    digitalWrite(motor1_L_EN, HIGH);
-
-    motor1Rpmw = -(ch1 - 511) / 2; //max speed 255 / adjust accordingly...
-    analogWrite(panDownOutput, 0);
-    analogWrite(panUpOutput, reversePWM);
-    
-    
-  }
-  else
-  {
-    
-    // forward rotation
-    digitalWrite(motor1_R_EN, HIGH);
-    digitalWrite(motor1_L_EN, LOW);
-    
-
-    motor1Lpmw = (ch1 - 512) / 2; //max speed 255 / adjust accordingly...
-    analogWrite(panUpOutput, 0);
-    analogWrite(panDownOutput, forwardPWM);
-  }
-  //.............................................................................................
-  
-  
-  //old stuff...................
-  if (ch1 > 1600) {
-    upSpeed = map(joyposVert, 1500, 1000, 0, 255); // motor 1... 0 is stopped, 255 is full reverse...
-    analogWrite(panUpOutput, upSpeed);
-    analogWrite(panDownOutput, 0);
-  if (ch1 <= 1600) {
-    joyUpState = 0;
-  }
-  if ((ch1 < 1350) && (ch1 > 900)) {
-    joyDownState = 1;
-  } else {
-    joyDownState = 0;
-  }
-  if (ch4 > 1600)  {
-    joyRightState = 1;
-  } else {
-    joyRightState = 0;
-  }
-  if ( (ch4 < 1450) && (ch4 > 900) ) {
-    joyLeftState = 1;
-  } else {
-    joyLeftState = 0;
-  }
-
-    
-  
-  }
-  if (joyRightState == 1) {
-    digitalWrite(rotateRightOutput, LOW);
-  } else {
-    digitalWrite(rotateRightOutput, HIGH);
-  }
-  if (joyDownState == 1) {
-    digitalWrite(panDownOutput, LOW);
-  } else {
-    digitalWrite(panDownOutput, HIGH);
-  }
-  if (joyLeftState == 1) {
-    digitalWrite(rotateLeftOutput, LOW);
-  } else {
-    digitalWrite(rotateLeftOutput, HIGH);
-  }
-
-}
-
-
-
-void controlSwitches() {
-  //ch6 = top right rotation thing // clockwise = 1983 //counter clockwise = 990
-  if (ch6 > 1500) {
-    camera1SwitchState = 0;
-  } else {
-    camera1SwitchState = 1;
-  }
-  //ch8 = top left rotation thing // clockwise = 1983 //counter clockwise = 990
-  if (ch8 > 1500) {
-    lightSwitchState = 1;
-  } else {
-    lightSwitchState = 0;
-  }
-
-  if (camera1SwitchState == 1) {
-    digitalWrite(cameraTXSwitchOutput, LOW);
-    digitalWrite(camera1PowerOutput, LOW);
-  } else {
-    digitalWrite(cameraTXSwitchOutput, HIGH);
-    digitalWrite(camera1PowerOutput, HIGH);
-  }
-
-  if (lightSwitchState == 1) {
-    digitalWrite(lightSwitchOutput, LOW);
-  } else {
-    digitalWrite(lightSwitchOutput, HIGH);
-  }
-
-}
-
-
-
-void controlTrigger() {
-  if (ch5 > 1200) { //top right toggle switch in down position...
-    //ch7 = upper left toggle // up 990 , down 1982
-    if (ch7 > 1500) {
-      triggerSwitchState = 1;
-    } else {
-      triggerSwitchState = 0;
-    }
-    if (triggerSwitchState == 1) {
-      digitalWrite(pullTriggerOutput, LOW);
-      delay(50);
-    } else {
-      digitalWrite(pullTriggerOutput, HIGH);
-    }
-  } else {
-      digitalWrite(pullTriggerOutput, HIGH);
-  }
-}
-
-
-
-
-
-
-void controlDriverMotors() {
-
-  //disable trigger...
-  triggerSwitchState = 0;
-  digitalWrite(pullTriggerOutput, HIGH);
-  
-  joyposVert = ch1;
-  joyposHorz = ch2;
-  int centerPositionVert = 1500;
-  int centerPositionHorz = 1492;
-  int signalBuffer = 25;
-
-  if ((joyposVert > 750) && (joyposHorz > 750)) {
-    if (joyposVert < (centerPositionVert - signalBuffer)) {
-      // This is Backward
-      //Determine Motor Speeds
-      // As we are going backwards we need to reverse readings
-      driverMotorsStateX = map(joyposVert, 1500, 1000, 64, 1); // motor 1... 64 is stopped, 1 is full reverse...
-      driverMotorsStateY = map(joyposVert, 1500, 1000, 192, 128); // motor 2... 192 is stopped, 128 is full reverse
-    } else if (joyposVert > (centerPositionVert + signalBuffer)) {
-      // This is Forward
-      //Determine Motor Speeds
-      driverMotorsStateX = map(joyposVert, 1500, 2000, 64, 127);// motor 1... 64 is stopped, 127 full forward...
-      driverMotorsStateY = map(joyposVert, 1500, 2000, 192, 255); // motor 2... 192 is stopped, 255 full forward.
-    } else {
-      // This is Stopped
-      driverMotorsStateX = 64;
-      driverMotorsStateY = 192;
-    }
-
-
-  // Now do the steering
-  // The Horizontal position will "weigh" the motor speed
-  // Values for each motor
-    if (joyposHorz < (centerPositionHorz - signalBuffer)) {
-      // Move Left
-      // As we are going left we need to reverse readings
-      // Map the number to a value of 64 maximum
-      joyposHorz = map(joyposHorz, 1492, 992, 0, 64);
-      driverMotorsStateX = driverMotorsStateX - joyposHorz;
-      driverMotorsStateY = driverMotorsStateY + joyposHorz;
-      // Don't exceed max range for motor speeds
-      if (driverMotorsStateX < 0)driverMotorsStateX = 0;
-      if (driverMotorsStateY > 255)driverMotorsStateY = 255;
-    } else if (joyposHorz > (centerPositionHorz + signalBuffer)) {
-      // Move Right
-      // Map the number to a value of 64 maximum
-      joyposHorz = map(joyposHorz, 1492, 1984, 0, 64);
-      driverMotorsStateX = driverMotorsStateX + joyposHorz;
-      driverMotorsStateY = driverMotorsStateY - joyposHorz;
-      // Don't exceed max range for motor speeds
-      if (driverMotorsStateX > 127)driverMotorsStateX = 127;
-      if (driverMotorsStateY < 0)driverMotorsStateY = 0;      
-    }
-
-    if (driverMotorsStateX == 0) {
-      driverMotorsStateX = 64;
-    }
-    if (driverMotorsStateY == 0) {
-      driverMotorsStateY = 192;
-    }
-
-    // Set Motor Direction
-    Serial2.write(driverMotorsStateX);
-    Serial2.write(driverMotorsStateY);
-
-  }
-
-}
-
-
-
-
-
-
-
-
 
 
 //helper functions...
-
-
-void killRobot() {
-  digitalWrite(pullTriggerOutput, HIGH);
-  //digitalWrite(cameraTXSwitchOutput, HIGH); leave a camera on
-  digitalWrite(lightSwitchOutput, HIGH);
-  digitalWrite(panUpOutput, HIGH);
-  digitalWrite(rotateRightOutput, HIGH);
-  digitalWrite(panDownOutput, HIGH);
-  digitalWrite(rotateLeftOutput, HIGH);
-
-}
-
-
-
-
-
-
 
 void handleInterrupt_P2() { 
   if(int0) 
@@ -417,12 +290,23 @@ void handleInterrupt_P20() {
   if(int4) 
     count4=micros(); // we got a positive edge 
   else 
-   ch4=micros()-count4; // Negative edge: get pulsewidth 
+   ch2=micros()-count4; // Negative edge: get pulsewidth 
 }
 
 void handleInterrupt_P21() { 
   if(int5) 
     count5=micros(); // we got a positive edge 
   else 
-   ch3=micros()-count5; // Negative edge: get pulsewidth 
+   ch1=micros()-count5; // Negative edge: get pulsewidth 
+}
+
+
+void serialPrintInputVars() {
+  delay(1000); 
+  Serial.println(ch1); //center: = 1492-1496, top = 2000, bottom = 992 ////good start position might be 1550
+  Serial.println(ch2); //center = 1492-1500, left = 992, right = 1992-1996
+  Serial.println(ch5); //down = 992 - 998, up = 1992-1996
+  Serial.println(ch6); //down = 992 - 998, up = 1992-1996
+  Serial.println(ch7); //up: 988, center = 1492, down = 1992
+  Serial.println(ch8); //up: 992, center = 1496, down = 1996
 }
