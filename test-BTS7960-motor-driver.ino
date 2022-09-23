@@ -1,4 +1,3 @@
-
 //int R_IS = 6;
 int R_EN = 39;
 int R_PWM = 10;
@@ -7,7 +6,7 @@ int L_EN = 37;
 int L_PWM = 13;
 
 void setup() {
-  // put your setup code here, to run once:
+ Serial.begin(9600);
  pinMode(R_EN, OUTPUT);
  pinMode(R_PWM, OUTPUT);
  pinMode(L_EN, OUTPUT);
@@ -43,8 +42,21 @@ void testFauxRcInputs() {
   ///joyposVert = ch1;
   //joyposHorz = ch2;
   //simulate...
-  int joyposVert = 1750;
+  
   int joyposHorz = 1120;
+  
+  //int joyposVert = 2222;
+  int joyposVert = 1200;
+
+
+  
+  if (joyposVert > 2000) {
+    joyposVert = 2000;
+  }
+  if (joyposVert < 1000) {
+    joyposVert = 1000;
+  }
+  
   
   int motor1Speed = 0;
   
@@ -60,20 +72,29 @@ void testFauxRcInputs() {
     //handle up position...
     if (joyposVert > (centerPositionVert + signalBuffer)) {
       //Determine Motor Speeds
-      motor1Speed = map(joyposVert, 1500, 2025, 0, 255); // motor 1... 0 is stopped, 255 is full reverse...
+      motor1Speed = map(joyposVert, 1500, 2000, 0, 255); // motor 1... 0 is stopped, 255 is full reverse...
+      //Serial.println(motor1Speed); //center: = 1492-1496, top = 2000, bottom = 992 ////good start position might be 1550
       analogWrite(R_PWM, motor1Speed);
       analogWrite(L_PWM, 0);
+      Serial.println(motor1Speed); //center: = 1492-1496, top = 2000, bottom = 992 ////good start position might be 1550
 
     //handle down position...
     } else if (joyposVert < (centerPositionVert - signalBuffer)) {
+
+       
       //Determine Motor Speeds
-      motor1Speed = map(joyposVert, 1500, 975, 0, 255);// motor 1... 0 is stopped, 255 full forward...
+      motor1Speed = map(joyposVert, 1500, 1000, 0, 255);// motor 1... 0 is stopped, 255 full forward...
       analogWrite(R_PWM, 0);
       analogWrite(L_PWM, motor1Speed);
+
     } else {
       // This is Stopped
       analogWrite(L_PWM, 0);
       analogWrite(R_PWM, 0);
     }
   }
+
+  //Serial.println(motor1Speed);
+  delay(1000);
+
 }
