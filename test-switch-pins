@@ -21,7 +21,7 @@ int rotateLeftOutput = 13;
 //camera output connection
 
 //change pin to digital...
-int camera1PowerOutput = A6; // control camera & transmitter with this connection
+int camera1PowerOutput = 9; // control camera & transmitter with this connection
 
 
 //trigger output connections
