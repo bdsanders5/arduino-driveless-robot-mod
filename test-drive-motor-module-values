@@ -154,7 +154,11 @@ void controlMotors() {
     if (joyposVert > (centerPosition + signalBuffer)) {
       //Determine Motor Speeds
       motor1Speed = map(joyposVert, 1500, 2000, 0, 255); // motor 1... 0 is stopped, 255 is full reverse...
+      
+      
+      Serial.println("up:");
       Serial.println(motor1Speed);
+      
       //analogWrite(panUpOutput, motor1Speed);
       //analogWrite(panDownOutput, 0);
 
@@ -162,6 +166,11 @@ void controlMotors() {
     } else if (joyposVert < (centerPosition - signalBuffer)) {
       //Determine Motor Speeds
       motor1Speed = map(joyposVert, 1500, 1000, 0, 255);// motor 1... 0 is stopped, 255 full forward...
+      
+      Serial.println("down:");
+      Serial.println(motor1Speed);
+      
+      
       //analogWrite(panUpOutput, 0);
       //analogWrite(panDownOutput, motor1Speed);
     } else {
@@ -175,6 +184,10 @@ void controlMotors() {
     if (joyposHorz > (centerPosition + signalBuffer)) {
       //Determine Motor Speeds
       motor2Speed = map(joyposHorz, 1500, 2000, 0, 255);
+
+      Serial.println("right:");
+      Serial.println(motor2Speed);
+      
       //analogWrite(rotateRightOutput, motor2Speed);
       //analogWrite(rotateLeftOutput, 0);
 
@@ -182,6 +195,10 @@ void controlMotors() {
     } else if (joyposHorz < (centerPosition - signalBuffer)) {
       //Determine Motor Speeds
       motor2Speed = map(joyposHorz, 1500, 1000, 0, 255);
+
+      Serial.println("left:");
+      Serial.println(motor2Speed);
+      
       //analogWrite(rotateRightOutput, 0);
       //analogWrite(rotateLeftOutput, motor2Speed);
     } else {
