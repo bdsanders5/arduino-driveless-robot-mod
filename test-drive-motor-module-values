@@ -73,7 +73,19 @@ void setup() {
 } 
 
 void loop() { 
+  
   delay(100);
+  //make sure you'r getting a signal:
+  if (  (ch6 > 900) && (ch6 < 2100) )  {
+    //serialPrintInputVars(); //used for testing -> function at page's bottom
+    controlSwitches();
+    controlTrigger();
+    controlMotors();
+  } else {
+    //killRobot();
+  }
+  
+  
   //serialPrintInputVars(); //used for testing -> function at page's bottom
   controlSwitches();
   controlTrigger();
