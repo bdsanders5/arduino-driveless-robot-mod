@@ -73,6 +73,7 @@ void setup() {
 } 
 
 void loop() { 
+  delay(100);
   //serialPrintInputVars(); //used for testing -> function at page's bottom
   controlSwitches();
   controlTrigger();
