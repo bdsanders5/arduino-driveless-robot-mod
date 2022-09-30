@@ -65,23 +65,22 @@ volatile long count5; // temporary variable for ch1
 
 
 
-void setup() { 
-  Serial.begin(9600);
+void setup() {
+  //Serial.begin(9600); //for diagnostics
   initRCInputPins();
   initSwitchPins();
   initDriveMotorPins();
+  delay(1000); //if arduino sets up before rc tx gets connection
 } 
 
 void loop() { 
   delay(100);
   //make sure you'r getting a signal:
- // Serial.println(ch6);
-
   if (  (ch6 > 900) && (ch6 < 2100) )  {
   //serialPrintInputVars(); //used for testing -> function at page's bottom
-  controlSwitches();
-  controlTrigger();
-  controlMotors();
+    controlSwitches();
+    controlTrigger();
+    controlMotors();
   } else {
     killRobot();
   }
@@ -163,11 +162,6 @@ void controlMotors() {
     if (joyposVert > (centerPosition + signalBuffer)) {
       //Determine Motor Speeds
       motor1Speed = map(joyposVert, 1500, 2000, 0, 255); // motor 1... 0 is stopped, 255 is full reverse...
-      
-      
-      //Serial.println("up:");
-      //Serial.println(motor1Speed);
-      
       analogWrite(panUpOutput, motor1Speed);
       analogWrite(panDownOutput, 0);
 
@@ -175,11 +169,6 @@ void controlMotors() {
     } else if (joyposVert < (centerPosition - signalBuffer)) {
       //Determine Motor Speeds
       motor1Speed = map(joyposVert, 1500, 1000, 0, 255);// motor 1... 0 is stopped, 255 full forward...
-      
-      //Serial.println("down:");
-      //Serial.println(motor1Speed);
-      
-      
       analogWrite(panUpOutput, 0);
       analogWrite(panDownOutput, motor1Speed);
     } else {
@@ -193,10 +182,6 @@ void controlMotors() {
     if (joyposHorz > (centerPosition + signalBuffer)) {
       //Determine Motor Speeds
       motor2Speed = map(joyposHorz, 1500, 2000, 0, 255);
-
-      //Serial.println("right:");
-      //Serial.println(motor2Speed);
-      
       analogWrite(rotateRightOutput, motor2Speed);
       analogWrite(rotateLeftOutput, 0);
 
@@ -204,10 +189,6 @@ void controlMotors() {
     } else if (joyposHorz < (centerPosition - signalBuffer)) {
       //Determine Motor Speeds
       motor2Speed = map(joyposHorz, 1500, 1000, 0, 255);
-
-      //Serial.println("left:");
-      //Serial.println(motor2Speed);
-      
       analogWrite(rotateRightOutput, 0);
       analogWrite(rotateLeftOutput, motor2Speed);
     } else {
@@ -217,10 +198,6 @@ void controlMotors() {
     }
    
   }
-
-  //Serial.println(motor1Speed);
-  delay(100);
-
 }
 
 
@@ -252,8 +229,16 @@ void initDriveMotorPins() {
   digitalWrite(motor2_L_EN, HIGH);
 }
 
-
-
+void killRobot() {
+  digitalWrite(pullTriggerOutput, HIGH);
+  digitalWrite(camera1PowerOutput, HIGH);
+  digitalWrite(lightSwitchOutput, HIGH);
+  digitalWrite(emptySwitchOutput1, HIGH);
+  analogWrite(panUpOutput, 0);
+  analogWrite(panDownOutput, 0);
+  analogWrite(rotateRightOutput, 0);
+  analogWrite(rotateLeftOutput, 0);
+}
 
 void initRCInputPins() {
   pinMode(ch1Input, INPUT);
