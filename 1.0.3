@@ -37,7 +37,7 @@ int motor2Rpmw = 0;
 int motor2Lpmw = 0;
 int safetySwitchState = 0;
 int triggerSwitchState = 0;
-int camera1SwitchState = 0;
+int camera1SwitchState = 1; //start with camera on...
 int lightSwitchState = 0;
 
 int motor1Speed = 0;
@@ -125,20 +125,30 @@ void controlSwitches() {
 
 void controlTrigger() {
   if (ch5 > 1700) { //top left toggle switch in up position (safety Off)...
-    //ch7 = top right toggle up = trigger pull...
-    if (ch6 > 1700) {
-      triggerSwitchState = 1;
-    } else {
-      triggerSwitchState = 0;
+    if (safetySwitchState == 0) {
+      safetySwitchState = 1;
     }
-    if (triggerSwitchState == 1) {
-      digitalWrite(pullTriggerOutput, LOW);
-      delay(100);
+    //ch6 = top right toggle up = trigger pull...
+    if (ch6 > 1700) {
+      if (triggerSwitchState == 0) {
+        triggerSwitchState = 1;
+        digitalWrite(pullTriggerOutput, LOW);
+        delay(100);
+      }
     } else {
-      digitalWrite(pullTriggerOutput, HIGH);
+      if (triggerSwitchState == 1) {
+        triggerSwitchState = 0;
+        digitalWrite(pullTriggerOutput, HIGH);
+       }
     }
   } else {
+    if (safetySwitchState == 1) {
+      safetySwitchState = 0;
+    }
+    if (triggerSwitchState == 1) {
+      triggerSwitchState = 0;
       digitalWrite(pullTriggerOutput, HIGH);
+    }
   }
 }
 
@@ -216,6 +226,9 @@ void initSwitchPins() {
   pinMode(camera1PowerOutput, OUTPUT);
   pinMode(lightSwitchOutput, OUTPUT);
   pinMode(emptySwitchOutput1, OUTPUT);
+  
+  //start with camera on...
+  digitalWrite(camera1PowerOutput, LOW);
 
 }
 
@@ -236,7 +249,7 @@ void initDriveMotorPins() {
 
 void killRobot() {
   digitalWrite(pullTriggerOutput, HIGH);
-  //digitalWrite(camera1PowerOutput, HIGH); //leave camera on...
+  lightSwitchState = 0;
   digitalWrite(lightSwitchOutput, HIGH);
   digitalWrite(emptySwitchOutput1, HIGH);
   analogWrite(panUpOutput, 0);
