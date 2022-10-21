@@ -66,7 +66,7 @@ volatile long count5; // temporary variable for ch1
 
 
 void setup() {
-  Serial.begin(9600); //for diagnostics
+  //Serial.begin(9600); //for diagnostics
   initRCInputPins();
   initSwitchPins();
   initDriveMotorPins();
@@ -77,8 +77,9 @@ void loop() {
   delay(100);
 
   //make sure you'r getting a signal:
-  
-  if (  (ch6 > 900) && (ch6 < 1100) )  {
+    //Serial.println(ch6); //down = 992 - 998, up = 1992-1996
+  //Serial.println(ch7); //up: 988, center = 1492, down = 1992
+  if (ch7 > 1600)  {
   //serialPrintInputVars(); //used for testing -> function at page's bottom
     controlCamera();
     controlLight();
@@ -358,3 +359,4 @@ void serialPrintInputVars() {
   Serial.println(ch7); //up: 988, center = 1492, down = 1992
   Serial.println(ch8); //up: 992, center = 1496, down = 1996
 }
+
