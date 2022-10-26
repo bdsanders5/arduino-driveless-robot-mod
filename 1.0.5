@@ -86,8 +86,10 @@ void loop() {
     controlTrigger();
     controlMotors();
   } else if (  (ch7 < 1400) || (ch7 > 1500) )  {
-    //keep the camera on...
-    controlCamera();
+    //if camera is on, leave it on...
+    if (camera1SwitchState == 1) {
+      digitalWrite(camera1PowerOutput, LOW);
+    }
     killRobot();
   } else {
     killRobot();
@@ -269,13 +271,13 @@ void killRobot() {
         lightSwitchState = 0;
     }
 
-  
-  
-  
   analogWrite(panUpOutput, 0);
   analogWrite(panDownOutput, 0);
   analogWrite(rotateRightOutput, 0);
   analogWrite(rotateLeftOutput, 0);
+
+
+
   delay(1000);
 }
 
