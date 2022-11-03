@@ -12,7 +12,7 @@ volatile long ch8;
 volatile long count1; // temporary variable for ch8
 
 void setup() {
-  //Serial.begin(9600); //for diagnostics
+  Serial.begin(9600); //for diagnostics
   initRCInputPins();
   initSwitchPins();
   delay(2000); //if arduino sets up before rc tx gets connection
@@ -21,10 +21,10 @@ void setup() {
 void loop() { 
   delay(100);
   //make sure you'r getting a signal:
-  if (ch7 < 1000)  {
-    //serialPrintInputVars(); //used for testing -> function at page's bottom
+  //if (ch7 < 1000)  {
+    serialPrintInputVars(); //used for testing -> function at page's bottom
     controlCamera();
-  }
+ //}
 } 
 
 
@@ -84,6 +84,6 @@ void handleInterrupt_P3() {
 
 void serialPrintInputVars() {
   delay(1000); 
-  Serial.println(ch7); //up: 992, center = 1496, down = 1996
+  //Serial.println(ch7); //up: 992, center = 1496, down = 1996
   Serial.println(ch8); //up: 992, center = 1496, down = 1996
 }
